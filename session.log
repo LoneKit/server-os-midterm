@@ -1,0 +1,314 @@
+Script started on 2026-10-13 20:14:44+00:00 [TERM="xterm-256color" TTY="/dev/pts/1" COLUMNS="145" LINES="43"]
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [7mcat /root/.lab_ready[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build[27m[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ cat /root/.lab_ready
+python3 /root/grading/check_lab.py --group lab01 --phase build
+[?2004lLab 01 ready (wire built, services started)
+  [   1/2 ] C4   named-checkconf -z FAILED; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   0/2 ] C1   client cannot reach named at 192.168.19.10 (timeout/no status). Check listen-on, allow-query, firewall, and that it serves on lan0.
+  [ 0.0/3 ] C2   ns1 expected 192.168.19.10 got nothing; www expected 192.168.19.20 got nothing; mail expected 192.168.19.30 got nothing; api expected 192.168.19.40 got nothing
+  [   0/2 ] C3   reverse lookup of 192.168.19.10 did not return ns1 (got nothing). Check the reverse zone and its PTR.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- this is the integration the whole project is about
+  [   1/1 ] C10  company domain advertised
+  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). If the leased resolver is a public one, that is the integration bug.
+  --------------------------------------------------
+  TOTAL: 11.0 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mnamed-checkconf -z[27m
+[7mecho "exit code: $?"[27m
+[7msystemctl status named --no-pager | head -15[27m
+[7mjournalctl -u named --no-pager | tail -15[27m[A[A[Anamed-checkconf -z
+echo "exit code: $?"
+systemctl status named --no-pager | head -15
+journalctl -u named --no-pager | tail -15
+[?2004lzone novapeak.lab/IN: loading from master file /etc/bind/db.MISSING failed: file not found
+zone novapeak.lab/IN: not loaded due to errors.
+_default/novapeak.lab/IN: file not found
+zone 19.168.192.in-addr.arpa/IN: loaded serial 2024010101
+zone localhost/IN: loaded serial 2
+zone 127.in-addr.arpa/IN: loaded serial 1
+zone 0.in-addr.arpa/IN: loaded serial 1
+zone 255.in-addr.arpa/IN: loaded serial 1
+exit code: 1
+● named.service - BIND Domain Name Server
+     Loaded: loaded (/usr/lib/systemd/system/named.service; enabled; preset: enabled)
+     Active: active (running) since Tue 2026-10-13 20:04:49 UTC; 10min ago
+       Docs: man:named(8)
+   Main PID: 2571 (named)
+     Status: "running"
+      Tasks: 5 (limit: 2237)
+     Memory: 22.0M (peak: 22.2M)
+        CPU: 30ms
+     CGroup: /system.slice/named.service
+             └─2571 /usr/sbin/named -f -u bind
+
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 192.58.128.30#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 193.0.14.129#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 193.0.14.129#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 192.112.36.4#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 192.112.36.4#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 192.203.230.10#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 192.203.230.10#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 192.58.128.30#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 192.58.128.30#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 193.0.14.129#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 193.0.14.129#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 198.41.0.4#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 198.41.0.4#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 192.36.148.17#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 192.36.148.17#53
+Oct 13 20:04:49 ubuntu named[2571]: DNS format error from 202.12.27.33#53 resolving ./NS for <unknown>: non-improving referral
+Oct 13 20:04:49 ubuntu named[2571]: FORMERR resolving './NS/IN': 202.12.27.33#53
+Oct 13 20:04:49 ubuntu named[2571]: resolver priming query complete: failure
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mls -l /etc/bind/[27m
+[7mgrep -n file /etc/bind/named.conf.local[27m[Als -l /etc/bind/
+grep -n file /etc/bind/named.conf.local
+[?2004ltotal 56
+-rw-r--r-- 1 root root 2928 Aug 27 14:10 bind.keys
+-rw-r--r-- 1 root root  255 Aug 21  2025 db.0
+-rw-r--r-- 1 root root  271 Aug 18  2025 db.127
+-rw-r--r-- 1 root root  237 Aug 18  2025 db.255
+-rw-r--r-- 1 root root  353 Aug 18  2025 db.empty
+-rw-r--r-- 1 root root  270 Aug 18  2025 db.local
+-rw-r--r-- 1 bind bind  212 Oct 13 20:04 db.novapeak.lab
+-rw-r--r-- 1 bind bind  233 Oct 13 20:04 db.novapeak.lab.rev
+-rw-r--r-- 1 root bind  458 Aug 21  2025 named.conf
+-rw-r--r-- 1 root bind  498 Aug 18  2025 named.conf.default-zones
+-rw-r--r-- 1 root bind  159 Oct 13 20:04 named.conf.local
+-rw-r--r-- 1 root bind  102 Oct 13 20:04 named.conf.options
+-rw-r----- 1 bind bind  100 Oct 13 20:04 rndc.key
+-rw-r--r-- 1 root root 1317 Aug 18  2025 zones.rfc1918
+[32m[K3[m[K[36m[K:[m[K	[01;31m[Kfile[m[K "/etc/bind/db.MISSING";
+[32m[K8[m[K[36m[K:[m[K	[01;31m[Kfile[m[K "/etc/bind/db.novapeak.lab.rev";
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mnamed-checkconf -z; echo "exit code: $?"[27m
+[7msystemctl restart named[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build[27m[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ named-checkconf -z; echo "exit code: $?"
+systemctl restart named
+python3 /root/grading/check_lab.py --group lab01 --phase build
+[?2004lzone novapeak.lab/IN: loading from master file /etc/bind/db.MISSING failed: file not found
+zone novapeak.lab/IN: not loaded due to errors.
+_default/novapeak.lab/IN: file not found
+zone 19.168.192.in-addr.arpa/IN: loaded serial 2024010101
+zone localhost/IN: loaded serial 2
+zone 127.in-addr.arpa/IN: loaded serial 1
+zone 0.in-addr.arpa/IN: loaded serial 1
+zone 255.in-addr.arpa/IN: loaded serial 1
+exit code: 1
+
+  [   1/2 ] C4   named-checkconf -z FAILED; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   0/2 ] C1   client cannot reach named at 192.168.19.10 (timeout/no status). Check listen-on, allow-query, firewall, and that it serves on lan0.
+  [ 0.0/3 ] C2   ns1 expected 192.168.19.10 got nothing; www expected 192.168.19.20 got nothing; mail expected 192.168.19.30 got nothing; api expected 192.168.19.40 got nothing
+  [   0/2 ] C3   reverse lookup of 192.168.19.10 did not return ns1 (got nothing). Check the reverse zone and its PTR.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- this is the integration the whole project is about
+  [   1/1 ] C10  company domain advertised
+  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). If the leased resolver is a public one, that is the integration bug.
+  --------------------------------------------------
+  TOTAL: 11.0 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K
+[?2004l[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [7msed -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local[27m
+[7mgrep -n file /etc/bind/named.conf.local[27m
+[7mnamed-checkconf -z; echo "exit code: $?"[27m[A[Ased -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local
+grep -n file /etc/bind/named.conf.local
+named-checkconf -z; echo "exit code: $?"
+[?2004l[32m[K3[m[K[36m[K:[m[K	[01;31m[Kfile[m[K "/etc/bind/db.novapeak.lab";
+[32m[K8[m[K[36m[K:[m[K	[01;31m[Kfile[m[K "/etc/bind/db.novapeak.lab.rev";
+zone novapeak.lab/IN: loaded serial 2024010101
+zone 19.168.192.in-addr.arpa/IN: loaded serial 2024010101
+zone localhost/IN: loaded serial 2
+zone 127.in-addr.arpa/IN: loaded serial 1
+zone 0.in-addr.arpa/IN: loaded serial 1
+zone 255.in-addr.arpa/IN: loaded serial 1
+exit code: 0
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7msystemctl restart named[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build[27m[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ systemctl restart named
+python3 /root/grading/check_lab.py --group lab01 --phase build
+[?2004lip netns exec client dig @192.168.19.10 novapeak.lab SOA +time=3 +tries=1
+dig @127.0.0.1 novapeak.lab SOA +short
+ss -lunp | grep ':53'
+
+  [   2/2 ] C4   named-checkconf -z clean; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   0/2 ] C1   client cannot reach named at 192.168.19.10 (timeout/no status). Check listen-on, allow-query, firewall, and that it serves on lan0.
+  [ 0.0/3 ] C2   ns1 expected 192.168.19.10 got nothing; www expected 192.168.19.20 got nothing; mail expected 192.168.19.30 got nothing; api expected 192.168.19.40 got nothing
+  [   0/2 ] C3   reverse lookup of 192.168.19.10 did not return ns1 (got nothing). Check the reverse zone and its PTR.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- this is the integration the whole project is about
+  [   1/1 ] C10  company domain advertised
+  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). If the leased resolver is a public one, that is the integration bug.
+  --------------------------------------------------
+  TOTAL: 12.0 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [Kip netns exec client dig @192.168.19.10 novapeak.lab SOA +time=3 +tries=1
+[?2004l;; communications error to 192.168.19.10#53: timed out
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @192.168.19.10 novapeak.lab SOA +time=3 +tries=1
+; (1 server found)
+;; global options: +cmd
+;; no servers could be reached
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [Kdig @127.0.0.1 novapeak.lab SOA +short
+[?2004l;; communications error to 127.0.0.1#53: timed out
+;; communications error to 127.0.0.1#53: timed out
+;; communications error to 127.0.0.1#53: timed out
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @127.0.0.1 novapeak.lab SOA +short
+; (1 server found)
+;; global options: +cmd
+;; no servers could be reached
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [Kss -lunp | grep ':53'
+[?2004lUNCONN 0      0                          192.168.19.10[01;31m[K:53[m[K        0.0.0.0:*    users:(("named",pid=3037,fd=25))          
+UNCONN 0      0                             172.17.0.1[01;31m[K:53[m[K        0.0.0.0:*    users:(("named",pid=3037,fd=23))          
+UNCONN 0      0                             172.30.1.2[01;31m[K:53[m[K        0.0.0.0:*    users:(("named",pid=3037,fd=21))          
+UNCONN 0      0                              127.0.0.1[01;31m[K:53[m[K        0.0.0.0:*    users:(("named",pid=3037,fd=18))          
+UNCONN 0      0                             127.0.0.54[01;31m[K:53[m[K        0.0.0.0:*    users:(("systemd-resolve",pid=1216,fd=16))
+UNCONN 0      0                          127.0.0.53%lo[01;31m[K:53[m[K        0.0.0.0:*    users:(("systemd-resolve",pid=1216,fd=14))
+UNCONN 0      0                                  [::1][01;31m[K:53[m[K           [::]:*    users:(("named",pid=3037,fd=27))          
+UNCONN 0      0      [fe80::611:1482:2e54:55df]%enp1s0[01;31m[K:53[m[K           [::]:*    users:(("named",pid=3037,fd=29))          
+UNCONN 0      0       [fe80::d071:d4ff:fe35:f0f8]%lan0[01;31m[K:53[m[K           [::]:*    users:(("named",pid=3037,fd=31))          
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ 
+[?2004l[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [7miptables -L INPUT -n -v --line-numbers[27miptables -L INPUT -n -v --line-numbers
+[?2004lChain INPUT (policy ACCEPT 1427 packets, 141K bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+1       16  1358 DROP       17   --  *      *       0.0.0.0/0            0.0.0.0/0            udp dpt:53
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7miptables -L INPUT -n -v --line-numbers[27m
+[7mdig @192.168.19.10 novapeak.lab SOA +tcp +short +time=3 +tries=1[27m[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ iptables -L INPUT -n -v --line-numbers
+dig @192.168.19.10 novapeak.lab SOA +tcp +short +time=3 +tries=1
+[?2004lChain INPUT (policy ACCEPT 1466 packets, 144K bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+1       16  1358 DROP       17   --  *      *       0.0.0.0/0            0.0.0.0/0            udp dpt:53
+ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7miptables -D INPUT -p udp --dport 53 -j DROP[27m
+[7miptables -L INPUT -n -v --line-numbers[27m
+[7mip netns exec client dig @192.168.19.10 novapeak.lab SOA +short +time=3 +tries=1[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build[27m[A[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ iptables -D INPUT -p udp --dport 53 -j DROP
+iptables -L INPUT -n -v --line-numbers
+ip netns exec client dig @192.168.19.10 novapeak.lab SOA +short +time=3 +tries=1
+python3 /root/grading/check_lab.py --group lab01 --phase build
+[?2004lChain INPUT (policy ACCEPT 1500 packets, 146K bytes)
+num   pkts bytes target     prot opt in     out     source               destination         
+ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
+  [   2/2 ] C4   named-checkconf -z clean; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   2/2 ] C1   named is authoritative for novapeak.lab and reachable from the client.
+  [2.25/3 ] C2   api expected 192.168.19.40 got ['192.168.19.1']
+  [   2/2 ] C3   reverse lookup of 192.168.19.10 returns ns1.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- this is the integration the whole project is about
+  [   1/1 ] C10  company domain advertised
+  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). If the leased resolver is a public one, that is the integration bug.
+  --------------------------------------------------
+  TOTAL: 18.25 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mip netns exec client dig @192.168.19.10 api.novapeak.lab A +short[27m
+[7mgrep -n api /etc/bind/db.novapeak.lab[27m
+[7mgrep -n -E '^(10|20|30|40) ' /etc/bind/db.novapeak.lab.rev[27m[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
+grep -n api /etc/bind/db.novapeak.lab
+grep -n -E '^(10|20|30|40) ' /etc/bind/db.novapeak.lab.rev
+[?2004l192.168.19.1
+[32m[K7[m[K[36m[K:[m[K[01;31m[Kapi[m[K IN A 192.168.19.1
+[32m[K4[m[K[36m[K:[m[K[01;31m[K10 [m[KIN PTR ns1.novapeak.lab.
+[32m[K5[m[K[36m[K:[m[K[01;31m[K20 [m[KIN PTR www.novapeak.lab.
+[32m[K6[m[K[36m[K:[m[K[01;31m[K30 [m[KIN PTR mail.novapeak.lab.
+[32m[K7[m[K[36m[K:[m[K[01;31m[K40 [m[KIN PTR api.novapeak.lab.
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7msed -i 's/^api IN A 192.168.19.1$/api IN A 192.168.19.40/' /etc/bind/db.novapeak.lab[27m
+[7msed -i 's/2024010101/2024010102/' /etc/bind/db.novapeak.lab[27m
+[7mcat /etc/bind/db.novapeak.lab[27m
+[7mnamed-checkzone novapeak.lab /etc/bind/db.novapeak.lab[27m
+[7mrndc reload novapeak.lab[27m
+[7mip netns exec client dig @192.168.19.10 api.novapeak.lab A +short[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build[27m[A[A[A[A[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ sed -i 's/^api IN A 192.168.19.1$/api IN A 192.168.19.40/' /etc/bind/db.novapeak.lab
+sed -i 's/2024010101/2024010102/' /etc/bind/db.novapeak.lab
+cat /etc/bind/db.novapeak.lab
+named-checkzone novapeak.lab /etc/bind/db.novapeak.lab
+rndc reload novapeak.lab
+ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
+python3 /root/grading/check_lab.py --group lab01 --phase build
+[?2004l$TTL 3600
+@ IN SOA ns1.novapeak.lab. admin.novapeak.lab. ( 2024010102 3600 1800 604800 3600 )
+@ IN NS ns1.novapeak.lab.
+ns1 IN A 192.168.19.10
+www IN A 192.168.19.20
+mail IN A 192.168.19.30
+api IN A 192.168.19.40
+zone novapeak.lab/IN: loaded serial 2024010102
+OK
+zone reload queued
+192.168.19.40
+  [   2/2 ] C4   named-checkconf -z clean; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   2/2 ] C1   named is authoritative for novapeak.lab and reachable from the client.
+  [ 3.0/3 ] C2   all four A records correct
+  [   2/2 ] C3   reverse lookup of 192.168.19.10 returns ns1.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- this is the integration the whole project is about
+  [   1/1 ] C10  company domain advertised
+  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). If the leased resolver is a public one, that is the integration bug.
+  --------------------------------------------------
+  TOTAL: 19.0 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mip netns exec client dhcpcd -U cli0 | grep -E 'ip_address|routers|domain_name'[27m
+[7mgrep -n -E 'domain-name|router|range' /etc/dhcp/dhcpd.conf[27m
+[7mip netns exec client dig @8.8.8.8 www.novapeak.lab +time=2 +tries=1 | head -5[27m[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ ip netns exec client dhcpcd -U cli0 | grep -E 'ip_address|routers|domain_name'
+grep -n -E 'domain-name|router|range' /etc/dhcp/dhcpd.conf
+ip netns exec client dig @8.8.8.8 www.novapeak.lab +time=2 +tries=1 | head -5
+[?2004l[01;31m[Kip_address[m[K=192.168.19.104
+[01;31m[Krouters[m[K=192.168.19.1
+[01;31m[Kdomain_name[m[K_servers=8.8.8.8
+[01;31m[Kdomain_name[m[K=novapeak.lab
+[32m[K1[m[K[36m[K:[m[Koption [01;31m[Kdomain-name[m[K "novapeak.lab";
+[32m[K6[m[K[36m[K:[m[K	[01;31m[Krange[m[K 192.168.19.104 192.168.19.144;
+[32m[K7[m[K[36m[K:[m[K	option [01;31m[Krouter[m[Ks 192.168.19.1;
+[32m[K8[m[K[36m[K:[m[K	option [01;31m[Kdomain-name[m[K-servers 8.8.8.8;
+;; communications error to 8.8.8.8#53: timed out
+
+; <<>> DiG 9.18.39-0ubuntu0.24.04.7-Ubuntu <<>> @8.8.8.8 www.novapeak.lab +time=2 +tries=1
+; (1 server found)
+;; global options: +cmd
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7msed -i 's/option domain-name-servers 8.8.8.8;/option domain-name-servers 192.168.19.10;/' /etc/dhcp/dhcpd.conf[27m
+[7mgrep -n domain-name-servers /etc/dhcp/dhcpd.conf[27m
+[7mdhcpd -t -cf /etc/dhcp/dhcpd.conf; echo "exit code: $?"[27m
+[7msystemctl restart isc-dhcp-server[27m
+[7msystemctl is-active isc-dhcp-server[27m
+[7mpython3 /root/grading/check_lab.py --group lab01 --phase build | tee /root/checker_result.txt[27m[A[A[A[A[A[01;32mroot@ubuntu[00m:[01;34m~[00m$ sed -i 's/option domain-name-servers 8.8.8.8;/option domain-name-servers 192.168.19.10;/' /etc/dhcp/dhcpd.conf
+grep -n domain-name-servers /etc/dhcp/dhcpd.conf
+dhcpd -t -cf /etc/dhcp/dhcpd.conf; echo "exit code: $?"
+systemctl restart isc-dhcp-server
+systemctl is-active isc-dhcp-server
+python3 /root/grading/check_lab.py --group lab01 --phase build | tee /root/checker_result.txt
+[?2004l[32m[K8[m[K[36m[K:[m[K	option [01;31m[Kdomain-name-servers[m[K 192.168.19.10;
+Internet Systems Consortium DHCP Server 4.4.3-P1
+Copyright 2004-2022 Internet Systems Consortium.
+All rights reserved.
+For info, please visit https://www.isc.org/software/dhcp/
+Config file: /etc/dhcp/dhcpd.conf
+Database file: /var/lib/dhcp/dhcpd.leases
+PID file: /var/run/dhcpd.pid
+exit code: 0
+active
+  [   2/2 ] C4   named-checkconf -z clean; named-checkzone clean
+  [   2/2 ] C5   dhcpd -t clean; service running
+  [   2/2 ] C1   named is authoritative for novapeak.lab and reachable from the client.
+  [ 3.0/3 ] C2   all four A records correct
+  [   2/2 ] C3   reverse lookup of 192.168.19.10 returns ns1.
+  [   3/3 ] C6   client obtained a lease: 192.168.19.104
+  [ 2.0/2 ] C7   pool+netmask correct
+  [   2/2 ] C8   gateway advertised correctly
+  [   3/3 ] C9   DHCP advertises the company DNS (192.168.19.10)
+  [   1/1 ] C10  company domain advertised
+  [   3/3 ] C11  client resolves www via the leased resolver
+  --------------------------------------------------
+  TOTAL: 25.0 / 25
+[?2004h[01;32mroot@ubuntu[00m:[01;34m~[00m$ [K[7mexit[27m
+[7mls -l /root/session.log /root/checker_result.txt[27m[Aexit
+ls -l /root/session.log /root/checker_result.txt
+[?2004lexit
+
+Script done on 2026-10-13 20:18:14+00:00 [COMMAND_EXIT_CODE="0"]
