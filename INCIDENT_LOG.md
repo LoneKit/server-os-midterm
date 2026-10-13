@@ -1,6 +1,6 @@
 # Incident Log
 
-Group: TODO
+Group: Dune
 Members: TODO (name + GitHub username, one per line)
 Company / domain: novapeak.lab
 
