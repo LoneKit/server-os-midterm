@@ -1,8 +1,16 @@
-# Incident Log
+# Incident Log 
 
-Group: Dune
-Members: TODO (name + GitHub username, one per line)
-Company / domain: novapeak.lab
+## Group – Dune
+
+| Name | GitHub Username | Student ID |
+|---|---|---|
+| Swam Pyae Paing | [@LoneKit](https://github.com/LoneKit) | 6705142028 |
+| Thet Htoo Aung | [@thethtoo724-design](https://github.com/thethtoo724-design) | 6705142042 |
+| Minn Khant Si Thu | [@minnkhantsithu](https://github.com/minnkhantsithu) | 6705142014 |
+| Soe Moe Hein | [@6705142013-SoeMoe](https://github.com/6705142013-SoeMoe) | 6705142013 |
+
+- **Company / domain you were assigned:** novapeak.lab
+- **Group id used with the checker:** lab01
 
 Baseline before any fix: checker `TOTAL: 11.0 / 25`. Final: `TOTAL: 25.0 / 25`.
 
@@ -64,7 +72,7 @@ exit code: 0
 
 ## Fault 2: Firewall rule silently drops DNS (UDP/53)
 
-* **Symptom (what we observed):**
+* **Symptom :**
 
 ```
 $ python3 /root/grading/check_lab.py --group lab01 --phase build
@@ -77,10 +85,9 @@ $ dig @127.0.0.1 novapeak.lab SOA +short
 ;; communications error to 127.0.0.1#53: timed out
 ```
 
-* **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: a timeout (not REFUSED or SERVFAIL) means the query got no answer at all. Even loopback timed out, so allow-query would not explain it, because it would give REFUSED. We suspected a firewall rule dropping packets before named sees them. `ss` was used to rule out `listen-on`.
+Hypothesis : The DNS queries timed out without receiving a response. Since loopback queries also timed out, allow-query was unlikely to be the cause. We suspected that a firewall rule was dropping UDP/53 packets. The ss command helped rule out the listen-on setting.
 
-* **Proof (the command that confirmed the cause):**
+* **Proof :**
 
 ```
 $ ss -lunp | grep ':53'
@@ -94,19 +101,18 @@ num   pkts bytes target     prot opt in     out     source               destina
 1       16  1358 DROP       17   --  *      *       0.0.0.0/0            0.0.0.0/0            udp dpt:53
 ```
 
-  named is listening on lan0's address and on loopback (so `listen-on` is fine), but INPUT rule 1 drops UDP/53 and had already dropped 16 packets (our test queries).
+named was listening on both the LAN address and loopback, so the listen-on setting was correct. However, INPUT rule 1 was dropping UDP/53 packets and had already blocked 16 packets from our test queries.
 
 ```
 $ dig @192.168.19.10 novapeak.lab SOA +tcp +short +time=3 +tries=1
 ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
 ```
 
-  The same query over TCP gets an answer while UDP times out, and the packet counter did not move (still 16 / 1358), so the rule is specific to UDP/53.
+The same query worked over TCP but timed out over UDP. The packet counter remained unchanged, confirming that the firewall rule specifically blocked UDP/53 traffic.
 
-* **Fix (what we changed):**
-  Removed only that rule: `iptables -D INPUT -p udp --dport 53 -j DROP`.
+Fix : We removed only the rule blocking UDP port 53 using iptables -D INPUT -p udp --dport 53 -j DROP.
 
-* **Confirmation (output showing it now works):**
+Confirmation :
 
 ```
 $ iptables -L INPUT -n -v --line-numbers
@@ -121,13 +127,13 @@ ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
   TOTAL: 18.25 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** MINN KHANT SI THU
 
 ---
 
 ## Fault 3: `api` A record points at the gateway instead of 192.168.19.40
 
-* **Symptom (what we observed):**
+* **Symptom :**
 
 ```
   [2.25/3 ] C2   api expected 192.168.19.40 got ['192.168.19.1']
@@ -136,10 +142,10 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
 192.168.19.1
 ```
 
-* **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: 192.168.19.1 is the DHCP gateway, so a host called `api` pointing at the router looks wrong. The reverse zone is a second source of truth, so we compared it with the forward zone.
+* **Hypothesis :**
+  The DNS lookup returned 192.168.19.1, which is the DHCP gateway, instead of the expected IP address 192.168.19.40. This suggested that the A record for api.novapeak.lab was incorrectly configured. To investigate further, we compared the forward and reverse DNS zones to identify any inconsistencies between the hostname and its assigned IP address.
 
-* **Proof (the command that confirmed the cause):**
+* **Proof :**
 
 ```
 $ grep -n api /etc/bind/db.novapeak.lab
@@ -152,12 +158,12 @@ $ grep -n -E '^(10|20|30|40) ' /etc/bind/db.novapeak.lab.rev
 7:40 IN PTR api.novapeak.lab.
 ```
 
-  The reverse zone maps .40 to api, but the forward zone maps api to .1, so the two disagree. The scenario card (`python3 /root/grading/params.py lab01`) also says api is 192.168.19.40.
+  The reverse DNS zone associated IP address 192.168.19.40 with api.novapeak.lab, while the forward DNS zone incorrectly mapped the hostname to 192.168.19.1. This inconsistency confirmed that the forward A record was misconfigured. The scenario configuration, verified using python3 /root/grading/params.py lab01, also confirmed that the correct IP address for api was 192.168.19.40.
 
-* **Fix (what we changed):**
-  In `/etc/bind/db.novapeak.lab`, changed `api IN A 192.168.19.1` to `192.168.19.40`, bumped the SOA serial from 2024010101 to 2024010102, then reloaded the zone with `rndc reload novapeak.lab`.
+* **Fix :**
+   We corrected the A record in /etc/bind/db.novapeak.lab by changing the IP address for api from 192.168.19.1 to 192.168.19.40. We then incremented the SOA serial number from 2024010101 to 2024010102 to reflect the update and reloaded the DNS zone using rndc reload novapeak.lab to apply the changes.
 
-* **Confirmation (output showing it now works):**
+* **Confirmation :**
 
 ```
 $ named-checkzone novapeak.lab /etc/bind/db.novapeak.lab
@@ -171,7 +177,7 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
   TOTAL: 19.0 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** Swam Pyae Paing
 
 ---
 
