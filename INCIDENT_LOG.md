@@ -12,10 +12,6 @@
 - **Company / domain you were assigned:** novapeak.lab
 - **Group id used with the checker:** lab01
 
-Group: Dune
-Members: TODO (name + GitHub username, one per line)
-Company / domain: novapeak.lab
-
 Baseline before any fix: checker `TOTAL: 11.0 / 25`. Final: `TOTAL: 25.0 / 25`.
 
 ---
