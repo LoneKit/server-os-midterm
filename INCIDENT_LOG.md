@@ -77,8 +77,7 @@ $ dig @127.0.0.1 novapeak.lab SOA +short
 ;; communications error to 127.0.0.1#53: timed out
 ```
 
-* **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: a timeout (not REFUSED or SERVFAIL) means the query got no answer at all. Even loopback timed out, so allow-query would not explain it, because it would give REFUSED. We suspected a firewall rule dropping packets before named sees them. `ss` was used to rule out `listen-on`.
+Hypothesis (what we suspected and why): The DNS queries timed out without receiving a response. Since loopback queries also timed out, allow-query was unlikely to be the cause. We suspected that a firewall rule was dropping UDP/53 packets. The ss command helped rule out the listen-on setting.
 
 * **Proof (the command that confirmed the cause):**
 
@@ -94,19 +93,18 @@ num   pkts bytes target     prot opt in     out     source               destina
 1       16  1358 DROP       17   --  *      *       0.0.0.0/0            0.0.0.0/0            udp dpt:53
 ```
 
-  named is listening on lan0's address and on loopback (so `listen-on` is fine), but INPUT rule 1 drops UDP/53 and had already dropped 16 packets (our test queries).
+named was listening on both the LAN address and loopback, so the listen-on setting was correct. However, INPUT rule 1 was dropping UDP/53 packets and had already blocked 16 packets from our test queries.
 
 ```
 $ dig @192.168.19.10 novapeak.lab SOA +tcp +short +time=3 +tries=1
 ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
 ```
 
-  The same query over TCP gets an answer while UDP times out, and the packet counter did not move (still 16 / 1358), so the rule is specific to UDP/53.
+The same query worked over TCP but timed out over UDP. The packet counter remained unchanged, confirming that the firewall rule specifically blocked UDP/53 traffic.
 
-* **Fix (what we changed):**
-  Removed only that rule: `iptables -D INPUT -p udp --dport 53 -j DROP`.
+Fix (what we changed): We removed only the rule blocking UDP port 53 using iptables -D INPUT -p udp --dport 53 -j DROP.
 
-* **Confirmation (output showing it now works):**
+Confirmation (output showing it now works):
 
 ```
 $ iptables -L INPUT -n -v --line-numbers
@@ -121,7 +119,7 @@ ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
   TOTAL: 18.25 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** MINN KHANT SI THU
 
 ---
 
