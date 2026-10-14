@@ -1,4 +1,4 @@
-# Incident Log test
+# Incident Log
 
 Group: Dune
 Members: TODO (name + GitHub username, one per line)
