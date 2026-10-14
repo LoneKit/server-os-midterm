@@ -254,13 +254,5 @@ TOTAL: 25.0 / 25
 
 Config was valid, service was running, and the lab checker confirmed DHCP was handing out the right DNS and the client could resolve `www.novapeak.lab`.
 
-**Found/proved by:** [Soe Moe Hien] / Ran `dhcpcd -U cli0` to check the client's lease, looked at `/etc/dhcp/dhcpd.conf` for the advertised DNS, and used `dig` to test resolution.
+**Found/proved by:** Soe Moe Hien / Ran `dhcpcd -U cli0` to check the client's lease, looked at `/etc/dhcp/dhcpd.conf` for the advertised DNS, and used `dig` to test resolution.
 
-
-
-## Lessons learned (optional)
-
-* A service reporting "active (running)" does not mean the zone it should serve is loaded.
-* A timeout, even on loopback, points to a firewall drop rather than allow-query (which would return REFUSED).
-* Forward and reverse zones are independent checks on each other.
-* The DHCP integration fault was only visible from the client's side, not from a syntax check.
