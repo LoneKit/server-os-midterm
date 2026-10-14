@@ -1,4 +1,4 @@
-# Incident Log Test
+# Incident Log 
 
 Group: Dune
 Members: TODO (name + GitHub username, one per line)
@@ -127,7 +127,7 @@ ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
 
 ## Fault 3: `api` A record points at the gateway instead of 192.168.19.40
 
-* **Symptom (what we observed):**
+* **Symptom :**
 
 ```
   [2.25/3 ] C2   api expected 192.168.19.40 got ['192.168.19.1']
@@ -136,10 +136,10 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
 192.168.19.1
 ```
 
-* **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: 192.168.19.1 is the DHCP gateway, so a host called `api` pointing at the router looks wrong. The reverse zone is a second source of truth, so we compared it with the forward zone.
+* **Hypothesis :**
+  The DNS lookup returned 192.168.19.1, which is the DHCP gateway, instead of the expected IP address 192.168.19.40. This suggested that the A record for api.novapeak.lab was incorrectly configured. To investigate further, we compared the forward and reverse DNS zones to identify any inconsistencies between the hostname and its assigned IP address.
 
-* **Proof (the command that confirmed the cause):**
+* **Proof :**
 
 ```
 $ grep -n api /etc/bind/db.novapeak.lab
@@ -152,12 +152,12 @@ $ grep -n -E '^(10|20|30|40) ' /etc/bind/db.novapeak.lab.rev
 7:40 IN PTR api.novapeak.lab.
 ```
 
-  The reverse zone maps .40 to api, but the forward zone maps api to .1, so the two disagree. The scenario card (`python3 /root/grading/params.py lab01`) also says api is 192.168.19.40.
+  The reverse DNS zone associated IP address 192.168.19.40 with api.novapeak.lab, while the forward DNS zone incorrectly mapped the hostname to 192.168.19.1. This inconsistency confirmed that the forward A record was misconfigured. The scenario configuration, verified using python3 /root/grading/params.py lab01, also confirmed that the correct IP address for api was 192.168.19.40.
 
-* **Fix (what we changed):**
-  In `/etc/bind/db.novapeak.lab`, changed `api IN A 192.168.19.1` to `192.168.19.40`, bumped the SOA serial from 2024010101 to 2024010102, then reloaded the zone with `rndc reload novapeak.lab`.
+* **Fix :**
+   We corrected the A record in /etc/bind/db.novapeak.lab by changing the IP address for api from 192.168.19.1 to 192.168.19.40. We then incremented the SOA serial number from 2024010101 to 2024010102 to reflect the update and reloaded the DNS zone using rndc reload novapeak.lab to apply the changes.
 
-* **Confirmation (output showing it now works):**
+* **Confirmation :**
 
 ```
 $ named-checkzone novapeak.lab /etc/bind/db.novapeak.lab
@@ -171,7 +171,7 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
   TOTAL: 19.0 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** Swam Pyae Paing
 
 ---
 
