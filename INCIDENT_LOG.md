@@ -131,7 +131,7 @@ ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
   TOTAL: 18.25 / 25
 ```
 
-* **Found/proved by:** MINN KHANT SI THU
+* **Found/proved by:** MINN KHANT SI THU/ used iptables -L to find the UDP/53 DROP rule, removed it
 
 ---
 
@@ -181,7 +181,7 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
   TOTAL: 19.0 / 25
 ```
 
-* **Found/proved by:** Swam Pyae Paing
+* **Found/proved by:** Swam Pyae Paing/compared forward and reverse zones, fixed the A record and bumped the serial
 
 ---
 
