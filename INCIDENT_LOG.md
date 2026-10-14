@@ -20,6 +20,7 @@ Baseline before any fix: checker `TOTAL: 11.0 / 25`. Final: `TOTAL: 25.0 / 25`.
 
 * **Symptom (what we observed):**
 
+The lab checker showed that named-checkconf -z failed and the DNS records for ns1 and www could not be found.
 ```
 $ python3 /root/grading/check_lab.py --group lab01 --phase build
   [   1/2 ] C4   named-checkconf -z FAILED; named-checkzone clean
@@ -27,7 +28,8 @@ $ python3 /root/grading/check_lab.py --group lab01 --phase build
 ```
 
 * **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: `named-checkzone` was clean, so the zone file itself is valid. `named-checkconf -z` fails, so the problem is more likely in how named.conf refers to the zone.
+
+  We suspected that the forward zone configuration was pointing to the wrong file. Since named-checkzone was clean, the zone file itself appeared to be valid. However, named-checkconf -z failed, suggesting that BIND could not load the zone because of a configuration problem.
 
 * **Proof (the command that confirmed the cause):**
 
@@ -47,11 +49,13 @@ $ grep -n file /etc/bind/named.conf.local
 8:      file "/etc/bind/db.novapeak.lab.rev";
 ```
 
-  Note: named was `active (running)` the whole time, but the company zone was not loaded. The `FORMERR resolving './NS/IN'` / `resolver priming query complete: failure` lines in the journal are named failing to reach the internet root servers (no outbound access in the playground) and are unrelated to this lab.
+  These results confirmed that the forward zone pointed to /etc/bind/db.MISSING, which did not exist. The correct file was /etc/bind/db.novapeak.lab.
 
 * **Fix (what we changed):**
-  In `/etc/bind/named.conf.local`, changed the forward zone's `file` from `/etc/bind/db.MISSING` to `/etc/bind/db.novapeak.lab`:
-  `sed -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local`, then `systemctl restart named`.
+
+  We corrected the file path in /etc/bind/named.conf.local using this command:
+  `sed -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local`, Then, we restarted the BIND service:
+   `systemctl restart named`.
 
 * **Confirmation (output showing it now works):**
 
@@ -66,7 +70,7 @@ exit code: 0
   TOTAL: 12.0 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** Thet Htoo Aung/ Running named-checkconf -z, checking the available zone files, and inspecting /etc/bind/named.conf.local.
 
 ---
 
@@ -183,18 +187,21 @@ $ ip netns exec client dig @192.168.19.10 api.novapeak.lab A +short
 
 ## Fault 4: DHCP hands out a public resolver (8.8.8.8) instead of the company DNS
 
-* **Symptom (what we observed):**
+**Symptom (what we saw):**
+
+The client got a DHCP lease just fine, but DHCP was advertising the public DNS `8.8.8.8` instead of the company DNS `192.168.19.10`. So the client couldn't resolve `www.novapeak.lab` to the expected IP `192.168.19.20`.
 
 ```
-  [   3/3 ] C6   client obtained a lease: 192.168.19.104
-  [   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10 -- ...
-  [   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20 (got nothing). ...
+[   3/3 ] C6   client obtained a lease: 192.168.19.104
+[   0/3 ] C9   DHCP advertises 8.8.8.8, expected the company DNS 192.168.19.10
+[   0/3 ] C11  using the leased resolver 8.8.8.8, www did not resolve to 192.168.19.20
 ```
 
-* **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: the lease itself works, but a client using only what DHCP tells it would ask 8.8.8.8 about novapeak.lab, which cannot answer. So `domain-name-servers` in dhcpd.conf is probably wrong. The server config was syntactically valid (C5 clean), so only the client's view could reveal it.
+**Hypothesis (what we thought and why):**
 
-* **Proof (the command that confirmed the cause):**
+We figured the DHCP server was handing out the wrong DNS server to clients. The lease process itself was working—client got an IP no problem. But it was pointed at `8.8.8.8`, which can't resolve the internal domain `novapeak.lab`. That pointed to the `option domain-name-servers` line in `/etc/dhcp/dhcpd.conf` being wrong. Even though the config passed the syntax check (C5), we still had to look at the lease from the client's side to catch it.
+
+**Proof (command that confirmed it):**
 
 ```
 $ ip netns exec client dhcpcd -U cli0 | grep -E 'ip_address|routers|domain_name'
@@ -213,25 +220,43 @@ $ ip netns exec client dig @8.8.8.8 www.novapeak.lab +time=2 +tries=1
 ;; communications error to 8.8.8.8#53: timed out
 ```
 
-* **Fix (what we changed):**
-  In `/etc/dhcp/dhcpd.conf` line 8, changed `option domain-name-servers 8.8.8.8;` to `192.168.19.10;`, validated with `dhcpd -t`, and restarted with `systemctl restart isc-dhcp-server`.
+That confirmed it. DHCP was advertising `8.8.8.8` instead of the internal DNS `192.168.19.10`. The DNS query to the wrong resolver timed out, which is why the client couldn't resolve `www.novapeak.lab`.
 
-* **Confirmation (output showing it now works):**
+**Fix (what we changed):**
+
+We fixed the DNS server option in `/etc/dhcp/dhcpd.conf` by changing this line:
+
+`option domain-name-servers 8.8.8.8;`
+
+to:
+
+`option domain-name-servers 192.168.19.10;`
+
+Then we checked the config and restarted the DHCP service:
+
+`dhcpd -t -cf /etc/dhcp/dhcpd.conf`
+
+`systemctl restart isc-dhcp-server`
+
+**Confirmation (output showing it works now):**
 
 ```
 $ dhcpd -t -cf /etc/dhcp/dhcpd.conf; echo "exit code: $?"
 exit code: 0
+
 $ systemctl is-active isc-dhcp-server
 active
 
-  [   3/3 ] C9   DHCP advertises the company DNS (192.168.19.10)
-  [   3/3 ] C11  client resolves www via the leased resolver
-  TOTAL: 25.0 / 25
+[   3/3 ] C9   DHCP advertises the company DNS (192.168.19.10)
+[   3/3 ] C11  client resolves www via the leased resolver
+TOTAL: 25.0 / 25
 ```
 
-* **Found/proved by:** TODO
+Config was valid, service was running, and the lab checker confirmed DHCP was handing out the right DNS and the client could resolve `www.novapeak.lab`.
 
----
+**Found/proved by:** [Soe Moe Hien] / Ran `dhcpcd -U cli0` to check the client's lease, looked at `/etc/dhcp/dhcpd.conf` for the advertised DNS, and used `dig` to test resolution.
+
+
 
 ## Lessons learned (optional)
 
