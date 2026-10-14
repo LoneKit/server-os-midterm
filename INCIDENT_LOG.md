@@ -64,7 +64,7 @@ exit code: 0
 
 ## Fault 2: Firewall rule silently drops DNS (UDP/53)
 
-* **Symptom (what we observed):**
+* **Symptom :**
 
 ```
 $ python3 /root/grading/check_lab.py --group lab01 --phase build
@@ -77,9 +77,9 @@ $ dig @127.0.0.1 novapeak.lab SOA +short
 ;; communications error to 127.0.0.1#53: timed out
 ```
 
-Hypothesis (what we suspected and why): The DNS queries timed out without receiving a response. Since loopback queries also timed out, allow-query was unlikely to be the cause. We suspected that a firewall rule was dropping UDP/53 packets. The ss command helped rule out the listen-on setting.
+Hypothesis : The DNS queries timed out without receiving a response. Since loopback queries also timed out, allow-query was unlikely to be the cause. We suspected that a firewall rule was dropping UDP/53 packets. The ss command helped rule out the listen-on setting.
 
-* **Proof (the command that confirmed the cause):**
+* **Proof :**
 
 ```
 $ ss -lunp | grep ':53'
@@ -102,9 +102,9 @@ ns1.novapeak.lab. admin.novapeak.lab. 2024010101 3600 1800 604800 3600
 
 The same query worked over TCP but timed out over UDP. The packet counter remained unchanged, confirming that the firewall rule specifically blocked UDP/53 traffic.
 
-Fix (what we changed): We removed only the rule blocking UDP port 53 using iptables -D INPUT -p udp --dport 53 -j DROP.
+Fix : We removed only the rule blocking UDP port 53 using iptables -D INPUT -p udp --dport 53 -j DROP.
 
-Confirmation (output showing it now works):
+Confirmation :
 
 ```
 $ iptables -L INPUT -n -v --line-numbers
