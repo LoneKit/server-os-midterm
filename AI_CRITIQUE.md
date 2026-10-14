@@ -49,13 +49,17 @@ We gave the following to two AI tools, in fresh conversations, once each, with n
 | `api` A record is 192.168.19.1 instead of 192.168.19.40 | Yes, by comparing forward and reverse zones | Did not mention it | Did not mention it. It told us to `dig` each name and compare to "the IP addresses specified in your forward zone", which is circular because the wrong value *is* in the forward zone | **Both missed it.** Verified: before the fix the checker said `C4 ... named-checkzone clean` and, separately, `C2 ... api expected 192.168.19.40 got ['192.168.19.1']`. A zone with a wrong IP is still syntactically valid, so syntax checks cannot catch it; it took comparing two data sources (forward vs. PTR). |
 | DHCP advertises `8.8.8.8` instead of `192.168.19.10` | Yes, from the client's lease (`dhcpcd -U`) and `dhcpd.conf` | Pointed to `domain-name-servers` in `dhcpd.conf`, gave the right grep and fix, and noted scope overrides | Same diagnosis and fix, with good detail on scope overrides and lease renewal | **Both right.** Verified: our lease showed `domain_name_servers=8.8.8.8` and `dhcpd.conf` line 8 matched. Minor mismatch: both told us to renew with `dhclient`, but our lab client uses `dhcpcd`. |
 
-For each AI suggestion that was WRONG or misleading, how we verified it was wrong:
+### How we checked the wrong or misleading AI suggestions
 
-* **"Check/change `listen-on` and `allow-query` in `named.conf.options`" (both AIs).** Wrong for this lab. Verified: `ss -lunp | grep :53` in `session.log` shows named already listening on `192.168.19.10:53` and `127.0.0.1:53`, and our submitted `named.conf.options` still has the original `listen-on { any; }; allow-query { any; };`. We never changed that file and the checker still reached 25/25.
-* **"Add ACCEPT rules for port 53" (Claude).** Misleading: it would make DNS work while leaving the real fault (the DROP rule) in place. Verified: we removed only that rule with `iptables -D INPUT -p udp --dport 53 -j DROP`, and `iptables -L INPUT` then showed an empty chain and the client `dig` answered.
-* **"Only investigate the firewall after loopback works" (ChatGPT).** Wrong ordering. Verified: loopback only started working after the firewall rule was removed, as `session.log` shows (timeouts first, then a SOA answer).
-* **`ufw` commands (both).** We did not run `ufw status` on the playground, so we cannot say whether it was active; our firewall problem was an iptables rule, so `ufw allow` would not have removed it.
-* **"Three independent problems" (Claude).** There were four faults; it grouped the zone-path and `api` problems together as "config or zone errors", which hid the `api` fault.
+- **Changing `listen-on` and `allow-query` in `named.conf.options` (both AIs):** This was not needed in our lab. The `ss -lunp | grep :53` output in `session.log` showed that named was already listening on `192.168.19.10:53` and `127.0.0.1:53`. Our submitted `named.conf.options` still has the original settings, `listen-on { any; };` and `allow-query { any; };`. We did not change this file, and the checker still reached 25/25.
+
+- **Adding ACCEPT rules for port 53 (Claude):** This was not the best fix because it would allow DNS traffic but leave the original DROP rule in place. We removed the DROP rule using `iptables -D INPUT -p udp --dport 53 -j DROP`. After that, `iptables -L INPUT` showed an empty chain, and the client's `dig` query worked.
+
+- **Checking the firewall only after loopback DNS works (ChatGPT):** This was the wrong order for our lab. The loopback `dig` query only started working after we removed the firewall rule. In `session.log`, we can see the timeout before the fix and a SOA answer afterward.
+
+- **Using `ufw` commands (both AIs):** We did not run `ufw status`, so we cannot confirm whether UFW was active. We found the problem in an iptables rule. Therefore, `ufw allow` would not have removed the specific DROP rule we found.
+
+- **Saying there were "three independent problems" (Claude):** There were actually four faults. Claude grouped the wrong zone file path and the incorrect `api` IP under configuration or zone errors. This made the separate `api` problem easier to miss.
 
 ---
 
