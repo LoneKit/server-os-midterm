@@ -20,6 +20,7 @@ Baseline before any fix: checker `TOTAL: 11.0 / 25`. Final: `TOTAL: 25.0 / 25`.
 
 * **Symptom (what we observed):**
 
+The lab checker showed that named-checkconf -z failed and the DNS records for ns1 and www could not be found.
 ```
 $ python3 /root/grading/check_lab.py --group lab01 --phase build
   [   1/2 ] C4   named-checkconf -z FAILED; named-checkzone clean
@@ -27,7 +28,8 @@ $ python3 /root/grading/check_lab.py --group lab01 --phase build
 ```
 
 * **Hypothesis (what we suspected and why):**
-  DRAFT, rewrite in your own words: `named-checkzone` was clean, so the zone file itself is valid. `named-checkconf -z` fails, so the problem is more likely in how named.conf refers to the zone.
+
+  We suspected that the forward zone configuration was pointing to the wrong file. Since named-checkzone was clean, the zone file itself appeared to be valid. However, named-checkconf -z failed, suggesting that BIND could not load the zone because of a configuration problem.
 
 * **Proof (the command that confirmed the cause):**
 
@@ -47,11 +49,13 @@ $ grep -n file /etc/bind/named.conf.local
 8:      file "/etc/bind/db.novapeak.lab.rev";
 ```
 
-  Note: named was `active (running)` the whole time, but the company zone was not loaded. The `FORMERR resolving './NS/IN'` / `resolver priming query complete: failure` lines in the journal are named failing to reach the internet root servers (no outbound access in the playground) and are unrelated to this lab.
+  These results confirmed that the forward zone pointed to /etc/bind/db.MISSING, which did not exist. The correct file was /etc/bind/db.novapeak.lab.
 
 * **Fix (what we changed):**
-  In `/etc/bind/named.conf.local`, changed the forward zone's `file` from `/etc/bind/db.MISSING` to `/etc/bind/db.novapeak.lab`:
-  `sed -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local`, then `systemctl restart named`.
+
+  We corrected the file path in /etc/bind/named.conf.local using this command:
+  `sed -i 's#/etc/bind/db.MISSING#/etc/bind/db.novapeak.lab#' /etc/bind/named.conf.local`, Then, we restarted the BIND service:
+   `systemctl restart named`.
 
 * **Confirmation (output showing it now works):**
 
@@ -66,7 +70,7 @@ exit code: 0
   TOTAL: 12.0 / 25
 ```
 
-* **Found/proved by:** TODO
+* **Found/proved by:** Thet Htoo Aung/ Running named-checkconf -z, checking the available zone files, and inspecting /etc/bind/named.conf.local.
 
 ---
 
