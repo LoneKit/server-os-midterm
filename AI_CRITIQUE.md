@@ -62,10 +62,22 @@ For each AI suggestion that was WRONG or misleading, how we verified it was wron
 ## Part 3d: Verdict
 
 **Where our human diagnosis beat the AIs:**
-The `api` record. Both AIs missed it, and its checker line sat next to a "named-checkzone clean" line, so syntax-focused advice cannot find it. We found it by comparing the forward zone with the reverse zone and with the scenario card, which means checking two sources of truth against each other. The firewall fault is the other case: reading `iptables -L` directly and seeing a packet counter increase on a DROP rule was stronger evidence than either AI's reasoning, and it showed that ChatGPT's order of investigation (fix BIND first, firewall later) would have sent us the wrong way.
+The `api` record.Both AIs missed the API fault. Its checker line sat right next to a "named-checkzone clean" line, so syntax-focused advice couldn't catch it. We found it by comparing the forward zone, the reverse zone, and the scenario card—checking two sources of truth against each other.
 
-**Where an AI genuinely helped:**
-The fresh Claude noticed the key clue in the symptoms alone: a *timeout* on loopback, rather than a refusal, points at a DROP rule, not a dead named. Both AIs gave correct, well-explained DHCP fixes (including the scope-override warning), and both asked us to confirm each cause with a command before changing anything. ChatGPT's `tcpdump` suggestion (queries arriving but no replies leaving) is a good way to prove a firewall drop. In the main conversation, the AI's step-by-step coaching also saved time on commands and Git.
+The firewall fault was the other case. Reading iptables -L and watching a DROP rule's packet counter climb was stronger proof than either AI's reasoning. It also showed ChatGPT's order—fix BIND first, firewall later—would've sent us the wrong way.
 
-**What we learned about trusting AI to diagnose a live system it cannot see:**
-An AI that cannot see the system gives a menu of plausible causes, and the confident-sounding ones are not necessarily the right ones: both told us to edit `listen-on` and `allow-query`, which were fine. The useful ones asked for evidence first, and the only real test was running the command ourselves and reading the output. A fix can also work while being wrong: adding an ACCEPT rule above a DROP rule would have made the checker pass for the wrong reason. We also learned to be honest about our own use of AI: the main conversation told us the faults up front, so it was not a fair test, and the blind test only means something when the AI sees just the symptoms. In the end, the trustworthy parts of our submission are the ones backed by command output in `session.log`.
+Where an AI actually helped:
+
+Fresh Claude caught the clue in the symptoms alone: a timeout on loopback, not a refusal, points at a DROP rule, not a dead named.
+
+Both AIs gave correct DHCP fixes (including the scope-override warning) and told us to confirm with a command before changing anything. ChatGPT's tcpdump idea—queries arriving, no replies leaving—is a good way to prove a firewall drop. In the main chat, the step-by-step coaching saved time on commands and Git.
+
+What we learned:
+
+An AI that can't see the system gives you a menu of plausible causes, and the confident ones ain't always right. Both told us to edit listen-on and allow-query—both were fine. The useful ones asked for evidence first. The only real test was running the command and reading the output.
+
+A fix can also work while being wrong: adding an ACCEPT above a DROP would've passed the checker for the wrong reason.
+
+We also gotta be honest—the main chat told us the faults up front, so it wasn't a fair test. Blind test only counts when the AI sees just the symptoms. The trustworthy parts of our submission are the ones backed by command output in session.log.
+
+
